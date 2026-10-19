@@ -1,5 +1,7 @@
 <?php
 
+// Displays a list of uploaded submissions
+
 $dir = '/data';
 $files = glob($dir . '/*.json');
 $entries = [];

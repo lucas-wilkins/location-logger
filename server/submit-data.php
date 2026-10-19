@@ -1,4 +1,7 @@
 <?php
+
+// Saves incoming data to the server
+
 header('Content-Type: application/json; charset=utf-8');
 
 function respond($success, $message, $statusCode = 200) {
