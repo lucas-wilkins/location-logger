@@ -31,29 +31,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextField(
             controller: _name,
             decoration: const InputDecoration(
-                labelText: 'Contributor name',
-                border: OutlineInputBorder()),
+              labelText: 'Contributor name',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _server,
             keyboardType: TextInputType.url,
             decoration: const InputDecoration(
-                labelText: 'Server address',
-                hintText: 'Provided by the project lead',
-                border: OutlineInputBorder()),
+              labelText: 'Server address',
+              hintText: 'Provided by the project lead',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _password,
             obscureText: true,
             decoration: const InputDecoration(
-                labelText: 'Password', border: OutlineInputBorder()),
+              labelText: 'Password',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 8),
           SwitchListTile(
             title: const Text('Field mode (screen lock)'),
-            subtitle: const Text('Behaviour to be agreed with the project lead'),
+            subtitle: const Text(
+              'Behaviour to be agreed with the project lead',
+            ),
             value: _fieldMode,
             onChanged: (v) => setState(() => _fieldMode = v),
           ),

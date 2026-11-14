@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'package:citizen_science_app/database/database_helper.dart';
 import 'package:citizen_science_app/models/dataset.dart';
 import 'package:citizen_science_app/models/observation.dart';
+import 'package:citizen_science_app/services/location_service.dart';
 
 class DatasetDetailsScreen extends StatefulWidget {
   final Dataset dataset;
@@ -14,6 +15,7 @@ class DatasetDetailsScreen extends StatefulWidget {
 
 class _DatasetDetailsScreenState extends State<DatasetDetailsScreen> {
   final _db = DatabaseHelper.instance;
+  final _loc = LocationService();
   List<Observation> _obs = [];
 
   @override
@@ -35,30 +37,41 @@ class _DatasetDetailsScreenState extends State<DatasetDetailsScreen> {
     return '${_two(l.hour)}:${_two(l.minute)}:${_two(l.second)}';
   }
 
-Future<void> _record() async {
-  try {
-    await _db.insertObservation(Observation(
-      id: const Uuid().v4(),
-      datasetId: widget.dataset.id,
-      timestamp: DateTime.now(),
-      locationStatus: 'unavailable',
-    ));
-    await _load();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sighting saved'),
-        duration: Duration(seconds: 1),
-      ),
-    );
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Could not save: $e')),
-    );
+  Future<void> _record() async {
+    final pressedAt = DateTime.now(); // time of the tap, not of the GPS fix
+    try {
+      final loc = await _loc.getCurrent();
+      await _db.insertObservation(
+        Observation(
+          id: const Uuid().v4(),
+          datasetId: widget.dataset.id,
+          timestamp: pressedAt,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          gpsAccuracy: loc.accuracy,
+          locationStatus: loc.status,
+        ),
+      );
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            loc.status == 'available'
+                ? 'Saved with location'
+                : 'Saved without location: ${loc.reason}',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save: $e')));
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -72,9 +85,13 @@ Future<void> _record() async {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Column(
               children: [
-                Text('$validCount',
-                    style: const TextStyle(
-                        fontSize: 56, fontWeight: FontWeight.bold)),
+                Text(
+                  '$validCount',
+                  style: const TextStyle(
+                    fontSize: 56,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Text('valid of ${_obs.length} recorded'),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -84,11 +101,16 @@ Future<void> _record() async {
                     onPressed: _record,
                     style: FilledButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24)),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
                     ),
-                    child: const Text('RECORD SIGHTING',
-                        style: TextStyle(
-                            fontSize: 26, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'RECORD SIGHTING',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -105,14 +127,16 @@ Future<void> _record() async {
                     _time(o.timestamp),
                     style: TextStyle(
                       fontSize: 18,
-                      decoration:
-                          o.isValid ? null : TextDecoration.lineThrough,
+                      decoration: o.isValid ? null : TextDecoration.lineThrough,
                       color: o.isValid ? null : Colors.grey,
                     ),
                   ),
+                  isThreeLine: true,
                   subtitle: Text(
-                    '${o.locationStatus == 'available' ? 'Location available' : 'Location unavailable'}'
-                    ' | ${o.isValid ? 'Valid' : 'Invalid'}',
+                    o.locationStatus == 'available'
+                        ? '${o.latitude!.toStringAsFixed(5)}, ${o.longitude!.toStringAsFixed(5)}\n'
+                            'Accuracy: ${o.gpsAccuracy?.toStringAsFixed(1)} m | ${o.isValid ? 'Valid' : 'Invalid'}'
+                        : 'Location unavailable\n${o.isValid ? 'Valid' : 'Invalid'}',
                   ),
                   trailing: TextButton(
                     onPressed: () async {

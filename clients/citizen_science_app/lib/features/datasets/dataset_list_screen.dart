@@ -19,8 +19,18 @@ class _DatasetListScreenState extends State<DatasetListScreen> {
   bool _loading = true;
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   @override
@@ -40,13 +50,15 @@ class _DatasetListScreenState extends State<DatasetListScreen> {
 
   Future<void> _createDataset() async {
     final now = DateTime.now();
-    await _db.insertDataset(Dataset(
-      id: const Uuid().v4(),
-      name: 'Glowworm Survey - ${now.day} ${_months[now.month - 1]}',
-      projectType: 'glowworm_survey',
-      contributorName: 'Volunteer 01',
-      createdAt: now,
-    ));
+    await _db.insertDataset(
+      Dataset(
+        id: const Uuid().v4(),
+        name: 'Glowworm Survey - ${now.day} ${_months[now.month - 1]}',
+        projectType: 'glowworm_survey',
+        contributorName: 'Volunteer 01',
+        createdAt: now,
+      ),
+    );
     await _load();
   }
 
@@ -58,10 +70,11 @@ class _DatasetListScreenState extends State<DatasetListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                ),
           ),
         ],
       ),
@@ -70,41 +83,47 @@ class _DatasetListScreenState extends State<DatasetListScreen> {
         icon: const Icon(Icons.add),
         label: const Text('New dataset'),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _datasets.isEmpty
+      body:
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _datasets.isEmpty
               ? const Center(child: Text('No datasets yet. Tap New dataset.'))
               : ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: _datasets.length,
-                  itemBuilder: (context, i) {
-                    final d = _datasets[i];
-                    return Card(
-                      color: const Color(0xFF14181C),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        title: Text(d.name,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                              'Contributor: ${d.contributorName}\nObservations: ${d.observationCount}'),
+                padding: const EdgeInsets.all(12),
+                itemCount: _datasets.length,
+                itemBuilder: (context, i) {
+                  final d = _datasets[i];
+                  return Card(
+                    color: const Color(0xFF14181C),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      title: Text(
+                        d.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        trailing: UploadStatusBadge(status: d.uploadStatus),
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    DatasetDetailsScreen(dataset: d)),
-                          );
-                          _load();
-                        },
                       ),
-                    );
-                  },
-                ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Contributor: ${d.contributorName}\nObservations: ${d.observationCount}',
+                        ),
+                      ),
+                      trailing: UploadStatusBadge(status: d.uploadStatus),
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DatasetDetailsScreen(dataset: d),
+                          ),
+                        );
+                        _load();
+                      },
+                    ),
+                  );
+                },
+              ),
     );
   }
 }

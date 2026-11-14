@@ -16,34 +16,34 @@ class Observation {
   });
 
   Map<String, Object?> toMap() => {
-        'id': id,
-        'dataset_id': datasetId,
-        'timestamp': timestamp.toUtc().toIso8601String(),
-        'latitude': latitude,
-        'longitude': longitude,
-        'gps_accuracy': gpsAccuracy,
-        'location_status': locationStatus,
-        'is_valid': isValid ? 1 : 0,
-      };
+    'id': id,
+    'dataset_id': datasetId,
+    'timestamp': timestamp.toUtc().toIso8601String(),
+    'latitude': latitude,
+    'longitude': longitude,
+    'gps_accuracy': gpsAccuracy,
+    'location_status': locationStatus,
+    'is_valid': isValid ? 1 : 0,
+  };
 
   factory Observation.fromMap(Map<String, Object?> m) => Observation(
-        id: m['id'] as String,
-        datasetId: m['dataset_id'] as String,
-        timestamp: DateTime.parse(m['timestamp'] as String),
-        latitude: m['latitude'] as double?,
-        longitude: m['longitude'] as double?,
-        gpsAccuracy: m['gps_accuracy'] as double?,
-        locationStatus: m['location_status'] as String,
-        isValid: (m['is_valid'] as int) == 1,
-      );
+    id: m['id'] as String,
+    datasetId: m['dataset_id'] as String,
+    timestamp: DateTime.parse(m['timestamp'] as String),
+    latitude: m['latitude'] as double?,
+    longitude: m['longitude'] as double?,
+    gpsAccuracy: m['gps_accuracy'] as double?,
+    locationStatus: m['location_status'] as String,
+    isValid: (m['is_valid'] as int) == 1,
+  );
 
   Map<String, Object?> toUploadJson() => {
-        'observation_id': id,
-        'timestamp': timestamp.toUtc().toIso8601String(),
-        'latitude': latitude,
-        'longitude': longitude,
-        'gps_accuracy': gpsAccuracy,
-        'location_status': locationStatus,
-        'valid': isValid,
-      };
+    'observation_id': id,
+    'timestamp': timestamp.toUtc().toIso8601String(),
+    'latitude': latitude,
+    'longitude': longitude,
+    'gps_accuracy': gpsAccuracy,
+    'location_status': locationStatus,
+    'valid': isValid,
+  };
 }

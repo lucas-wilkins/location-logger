@@ -17,11 +17,13 @@ class DatabaseHelper {
       version: 1,
       onConfigure: (d) => d.execute('PRAGMA foreign_keys = ON'),
       onCreate: (d, _) async {
-        await d.execute('''
+        await d.execute(
+          '''
           CREATE TABLE datasets(
             id TEXT PRIMARY KEY, name TEXT NOT NULL, project_type TEXT NOT NULL,
             contributor_name TEXT NOT NULL, created_at TEXT NOT NULL,
-            upload_status TEXT NOT NULL, last_upload_attempt TEXT, uploaded_at TEXT)''');
+            upload_status TEXT NOT NULL, last_upload_attempt TEXT, uploaded_at TEXT)''',
+        );
         await d.execute('''
           CREATE TABLE observations(
             id TEXT PRIMARY KEY,
@@ -35,7 +37,9 @@ class DatabaseHelper {
             dataset_id TEXT NOT NULL REFERENCES datasets(id),
             submission_id TEXT NOT NULL, attempted_at TEXT NOT NULL,
             status TEXT NOT NULL, response_message TEXT)''');
-        await d.execute('CREATE INDEX idx_obs_dataset ON observations(dataset_id)');
+        await d.execute(
+          'CREATE INDEX idx_obs_dataset ON observations(dataset_id)',
+        );
       },
     );
   }
@@ -54,37 +58,52 @@ class DatabaseHelper {
       (await db).insert('observations', o.toMap());
 
   Future<List<Observation>> getObservations(String datasetId) async {
-    final rows = await (await db).query('observations',
-        where: 'dataset_id = ?', whereArgs: [datasetId], orderBy: 'timestamp DESC');
+    final rows = await (await db).query(
+      'observations',
+      where: 'dataset_id = ?',
+      whereArgs: [datasetId],
+      orderBy: 'timestamp DESC',
+    );
     return rows.map(Observation.fromMap).toList();
   }
 
   Future<void> setValid(String obsId, bool valid) async => (await db).update(
-      'observations', {'is_valid': valid ? 1 : 0},
-      where: 'id = ?', whereArgs: [obsId]);
+    'observations',
+    {'is_valid': valid ? 1 : 0},
+    where: 'id = ?',
+    whereArgs: [obsId],
+  );
 
-  Future<void> setUploadStatus(String datasetId, String status,
-      {bool confirmed = false}) async {
+  Future<void> setUploadStatus(
+    String datasetId,
+    String status, {
+    bool confirmed = false,
+  }) async {
     final now = DateTime.now().toUtc().toIso8601String();
     await (await db).update(
-        'datasets',
-        {
-          'upload_status': status,
-          'last_upload_attempt': now,
-          if (confirmed) 'uploaded_at': now,
-        },
-        where: 'id = ?',
-        whereArgs: [datasetId]);
+      'datasets',
+      {
+        'upload_status': status,
+        'last_upload_attempt': now,
+        if (confirmed) 'uploaded_at': now,
+      },
+      where: 'id = ?',
+      whereArgs: [datasetId],
+    );
   }
 
-  Future<void> addUploadRecord(String id, String datasetId, String submissionId,
-      String status, String? message) async =>
-      (await db).insert('upload_records', {
-        'id': id,
-        'dataset_id': datasetId,
-        'submission_id': submissionId,
-        'attempted_at': DateTime.now().toUtc().toIso8601String(),
-        'status': status,
-        'response_message': message,
-      });
+  Future<void> addUploadRecord(
+    String id,
+    String datasetId,
+    String submissionId,
+    String status,
+    String? message,
+  ) async => (await db).insert('upload_records', {
+    'id': id,
+    'dataset_id': datasetId,
+    'submission_id': submissionId,
+    'attempted_at': DateTime.now().toUtc().toIso8601String(),
+    'status': status,
+    'response_message': message,
+  });
 }
