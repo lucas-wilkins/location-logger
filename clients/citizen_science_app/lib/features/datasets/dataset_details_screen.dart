@@ -17,6 +17,7 @@ class _DatasetDetailsScreenState extends State<DatasetDetailsScreen> {
   final _db = DatabaseHelper.instance;
   final _loc = LocationService();
   List<Observation> _obs = [];
+  bool _saving = false;
 
   @override
   void initState() {
@@ -38,6 +39,8 @@ class _DatasetDetailsScreenState extends State<DatasetDetailsScreen> {
   }
 
   Future<void> _record() async {
+    if (_saving) return; // ignore extra taps while one is in progress
+    setState(() => _saving = true);
     final pressedAt = DateTime.now(); // time of the tap, not of the GPS fix
     try {
       final loc = await _loc.getCurrent();
@@ -70,6 +73,8 @@ class _DatasetDetailsScreenState extends State<DatasetDetailsScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Could not save: $e')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -98,19 +103,41 @@ class _DatasetDetailsScreenState extends State<DatasetDetailsScreen> {
                   width: double.infinity,
                   height: 120,
                   child: FilledButton(
-                    onPressed: _record,
+                    onPressed: _saving ? null : _record,
                     style: FilledButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: const Text(
-                      'RECORD SIGHTING',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child:
+                        _saving
+                            ? const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Text(
+                                  'GETTING LOCATION...',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            )
+                            : const Text(
+                              'RECORD SIGHTING',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                   ),
                 ),
               ],
